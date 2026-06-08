@@ -1,0 +1,35 @@
+# Example run config: AutoDAN (Genetic Algorithm) — a black-box, prompt-based
+# attack — against an open-weight target. Note it still needs a `target_model`
+# loaded via models/loader.py (per the project's decision to load all models from
+# HuggingFace, even for attacks that only need chat-level access — see PLAN.md's
+# "Models" section for why), plus an `attacker_model` for the mutation step.
+#
+# `attack.extra` keys should match GA's "Key hyperparameters" in
+# docs/ATTACK_MANUAL.md; the prompt-attack-agent owns keeping the two in sync.
+
+dataset:
+  name: socialharmbench
+
+target_model: llama-3-8b-instruct
+
+attack:
+  name: autodan_ga
+  attacker_model: mistral-7b-instruct # generates crossover/mutation rewrites
+  query_budget: 2000
+  extra:
+    population_size: 64
+    num_generations: 50
+    crossover_rate: 0.5
+    mutation_rate: 0.1
+    elite_count: 4
+    fitness: judge_score # or "loss" if running against a white-box target
+
+judges:
+  - name: strongreject
+    backend: openrouter
+    model: anthropic/claude-3.5-sonnet
+  - name: harmbench
+    model: harmbench-classifier
+
+aggregation: unanimous
+output_dir: results

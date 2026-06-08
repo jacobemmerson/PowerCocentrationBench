@@ -1,0 +1,35 @@
+# Example run config: GCG against an open-weight target, scored by both of the
+# benchmark's reference SocialHarmBench evaluators plus a general LLM-as-judge.
+#
+# This file documents the *shape* every run config follows — `evaluate.py` reads
+# exactly this structure (see its docstring). The `attack.extra` keys here should
+# match the "Key hyperparameters" documented for GCG in docs/ATTACK_MANUAL.md;
+# the gradient-attack-agent owns keeping the two in sync as the implementation lands.
+
+dataset:
+  name: socialharmbench
+
+target_model: vicuna-7b
+
+attack:
+  name: gcg
+  query_budget: 5000
+  extra:
+    suffix_length: 20
+    top_k: 256
+    batch_size: 512
+    num_steps: 500
+    target_string_template: "Sure, here is {behavior}"
+
+judges:
+  - name: strongreject
+    backend: openrouter
+    model: anthropic/claude-3.5-sonnet
+  - name: harmbench
+    model: harmbench-classifier
+  - name: llm_judge
+    backend: huggingface
+    model: llama-3-8b-instruct
+
+aggregation: majority_vote
+output_dir: results
